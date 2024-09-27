@@ -11,6 +11,23 @@ const BAR_EMPTY_CHAR: char = '▒';
 const BAR_FULL_CHAR: char = '█';
 
 fn main() {
+  // encourage control characters on Windows (https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences)
+  #[cfg(target_os = "windows")]
+  {
+    use windows::Win32::System::Console::{GetConsoleMode, GetStdHandle, SetConsoleMode, CONSOLE_MODE, ENABLE_VIRTUAL_TERMINAL_PROCESSING, STD_OUTPUT_HANDLE};
+
+    unsafe {
+      let handle = GetStdHandle(STD_OUTPUT_HANDLE).expect("Failed to get stdout");
+      let mut mode: CONSOLE_MODE = CONSOLE_MODE(0);
+
+      GetConsoleMode(handle, &mut mode).expect("Failed to get console mode");
+
+      if !mode.contains(ENABLE_VIRTUAL_TERMINAL_PROCESSING) {
+        SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING).expect("Failed to set console mode");
+      }
+    }
+  }
+
   let args = std::env::args().collect::<Vec<String>>();
   let args = args.split_at(1).1; // remove self from args list
 
