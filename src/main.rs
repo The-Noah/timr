@@ -173,22 +173,27 @@ fn main() {
     terminal::previous_line();
     terminal::clear_line();
 
+    // print current time (clock)
     print!("{} - ", chrono::Local::now().format("%_I:%M%P").to_string().trim());
 
+    // print hours remaining (if any)
     match (seconds / 3600.0).floor() {
       hours if hours > 0.0 => print!("{}h", hours),
       _ => {}
     };
 
+    // print minutes remaining (if any)
     match ((seconds % 3600.0) / 60.0).floor() {
       minutes if minutes > 0.0 => print!("{}m", minutes),
       _ => {}
     }
 
+    // print seconds remaining
     println!("{}s", (seconds % 60.0).ceil());
 
     terminal::clear_line();
 
+    // print the solid progress bar
     for i in 0..progress_width {
       let red = lerp(90, 123, i as f64 / bar_width as f64);
       let green = lerp(105, 90, i as f64 / bar_width as f64);
@@ -196,6 +201,7 @@ fn main() {
       print!("{}{}", terminal::ansi_rgb(red, green, 237), BAR_FULL_CHAR);
     }
 
+    // print empty progress bar and progress percent
     print!(
       "{}{}{}[39m  {}%",
       terminal::ansi_rgb(100, 100, 100),
