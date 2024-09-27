@@ -69,61 +69,7 @@ fn main() {
     exit(1);
   }
 
-  let duration = duration.unwrap();
-
-  let mut seconds = 0;
-  let mut current_number = String::new(); // temporary buffer to store the currently parsing number
-
-  for character in duration.chars() {
-    match character {
-      // take our current buffer and store it as seconds
-      's' => {
-        if current_number.is_empty() {
-          eprintln!("No number found before seconds");
-          exit(1);
-        }
-
-        seconds += current_number.parse::<u64>().unwrap();
-        current_number = String::new();
-      }
-      'm' => {
-        if current_number.is_empty() {
-          eprintln!("No number found before minutes");
-          exit(1);
-        }
-
-        seconds += current_number.parse::<u64>().unwrap() * 60;
-        current_number = String::new();
-      }
-      'h' => {
-        if current_number.is_empty() {
-          eprintln!("No number found before hours");
-          exit(1);
-        }
-
-        seconds += current_number.parse::<u64>().unwrap() * 3600;
-        current_number = String::new();
-      }
-
-      // append to our buffer
-      '0'..='9' => {
-        current_number.push(character);
-      }
-
-      // invalid character found
-      _ => {
-        eprintln!("Invalid time!");
-        exit(1);
-      }
-    }
-  }
-
-  // if there are any remaining numbers, assume seconds
-  if !current_number.is_empty() {
-    seconds += current_number.parse::<u64>().unwrap();
-  }
-
-  let duration = Duration::from_secs(seconds);
+  let duration = parse_duration(duration.unwrap());
 
   let start = Instant::now();
   let end = start + duration;
@@ -228,6 +174,62 @@ fn main() {
   terminal::clear_line();
 }
 
+fn parse_duration(duration: &str) -> Duration {
+  let mut seconds = 0;
+  let mut current_number = String::new(); // temporary buffer to store the currently parsing number
+
+  for character in duration.chars() {
+    match character {
+      // take our current buffer and store it as seconds
+      's' => {
+        if current_number.is_empty() {
+          eprintln!("No number found before seconds");
+          exit(1);
+        }
+
+        seconds += current_number.parse::<u64>().unwrap();
+        current_number = String::new();
+      }
+      'm' => {
+        if current_number.is_empty() {
+          eprintln!("No number found before minutes");
+          exit(1);
+        }
+
+        seconds += current_number.parse::<u64>().unwrap() * 60;
+        current_number = String::new();
+      }
+      'h' => {
+        if current_number.is_empty() {
+          eprintln!("No number found before hours");
+          exit(1);
+        }
+
+        seconds += current_number.parse::<u64>().unwrap() * 3600;
+        current_number = String::new();
+      }
+
+      // append to our buffer
+      '0'..='9' => {
+        current_number.push(character);
+      }
+
+      // invalid character found
+      _ => {
+        eprintln!("Invalid time!");
+        exit(1);
+      }
+    }
+  }
+
+  // if there are any remaining numbers, assume seconds
+  if !current_number.is_empty() {
+    seconds += current_number.parse::<u64>().unwrap();
+  }
+
+  Duration::from_secs(seconds)
+}
+
 fn print_help() {
   println!("{} v{}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
   println!("Usage: {} [options]", env!("CARGO_PKG_NAME"));
@@ -240,4 +242,63 @@ fn print_help() {
 
 fn lerp(a: u8, b: u8, t: f64) -> u8 {
   ((1.0 - t) * (a as f64) + t * (b as f64)).round() as u8
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn parse_default() {
+    assert_eq!(parse_duration("1"), Duration::from_secs(1));
+    assert_eq!(parse_duration("9"), Duration::from_secs(9));
+    assert_eq!(parse_duration("10"), Duration::from_secs(10));
+
+    assert_eq!(parse_duration("1m1"), Duration::from_secs(61));
+    assert_eq!(parse_duration("1m9"), Duration::from_secs(69));
+    assert_eq!(parse_duration("1m10"), Duration::from_secs(70));
+
+    assert_eq!(parse_duration("1h1m1"), Duration::from_secs(3661));
+    assert_eq!(parse_duration("1h1m9"), Duration::from_secs(3669));
+    assert_eq!(parse_duration("1h1m10"), Duration::from_secs(3670));
+  }
+
+  #[test]
+  fn parse_full() {
+    assert_eq!(parse_duration("1s"), Duration::from_secs(1));
+    assert_eq!(parse_duration("9s"), Duration::from_secs(9));
+    assert_eq!(parse_duration("10s"), Duration::from_secs(10));
+
+    assert_eq!(parse_duration("1m1s"), Duration::from_secs(61));
+    assert_eq!(parse_duration("1m9s"), Duration::from_secs(69));
+    assert_eq!(parse_duration("1m10s"), Duration::from_secs(70));
+
+    assert_eq!(parse_duration("1h1m1s"), Duration::from_secs(3661));
+    assert_eq!(parse_duration("1h1m9s"), Duration::from_secs(3669));
+    assert_eq!(parse_duration("1h1m10s"), Duration::from_secs(3670));
+  }
+
+  #[test]
+  fn parse_seconds() {
+    assert_eq!(parse_duration("1s"), Duration::from_secs(1));
+    assert_eq!(parse_duration("9s"), Duration::from_secs(9));
+    assert_eq!(parse_duration("19s"), Duration::from_secs(19));
+    assert_eq!(parse_duration("61s"), Duration::from_secs(61));
+  }
+
+  #[test]
+  fn parse_minutes() {
+    assert_eq!(parse_duration("1m"), Duration::from_secs(60));
+    assert_eq!(parse_duration("9m"), Duration::from_secs(540));
+    assert_eq!(parse_duration("19m"), Duration::from_secs(1140));
+    assert_eq!(parse_duration("61m"), Duration::from_secs(3660));
+  }
+
+  #[test]
+  fn parse_hours() {
+    assert_eq!(parse_duration("1h"), Duration::from_secs(3600));
+    assert_eq!(parse_duration("9h"), Duration::from_secs(32400));
+    assert_eq!(parse_duration("19h"), Duration::from_secs(68400));
+    assert_eq!(parse_duration("61h"), Duration::from_secs(219600));
+  }
 }
