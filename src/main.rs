@@ -199,6 +199,8 @@ fn main() {
   previous_line();
   clear_line();
 
+  print!("{}", 7 as char); // beep/alert
+
   println!("Finished!");
 
   clear_line();
