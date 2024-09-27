@@ -1,6 +1,7 @@
 use std::{
   io::{stdout, Write},
   process::exit,
+  sync::mpsc::channel,
   thread::sleep,
   time::{Duration, Instant},
 };
@@ -110,8 +111,22 @@ fn main() {
   let start = Instant::now();
   let end = start + duration;
 
+  // setup ctrl+c handler
+  let (exit_tx, exit_rx) = channel();
+  ctrlc::set_handler(move || exit_tx.send(()).expect("Could not send signal on channel.")).expect("Error setting Ctrl-C handler");
+
   let mut last_update = Instant::now();
   loop {
+    if exit_rx.try_recv().is_ok() {
+      clear_line();
+
+      println!("Exiting early!");
+
+      stdout().flush().unwrap();
+
+      return;
+    }
+
     let now = Instant::now();
 
     if now > end {

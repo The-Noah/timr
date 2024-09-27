@@ -12,4 +12,5 @@ keywords = ["cli"]
 categories = ["command-line-utilities"]
 
 [dependencies]
+ctrlc = { version = "3.4.5", features = ["termination"] }
 termsize = "0.1.9"
