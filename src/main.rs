@@ -157,7 +157,7 @@ fn main() {
     let remaining = end - now;
     let seconds = remaining.as_secs() as f64;
 
-    print!("{}[F", 27 as char); // move cursor to beginning of previous line
+    previous_line();
     clear_line();
 
     match (seconds / 3600.0).floor() {
@@ -180,9 +180,17 @@ fn main() {
     last_update = now;
   }
 
+  previous_line();
   clear_line();
 
   println!("Finished!");
+
+  clear_line();
+}
+
+/// Move cursor to beginning of the previous line
+fn previous_line() {
+  print!("{}[F", 27 as char);
 }
 
 fn clear_line() {
