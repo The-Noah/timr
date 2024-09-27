@@ -6,6 +6,8 @@ use std::{
   time::{Duration, Instant},
 };
 
+mod terminal;
+
 const BAR_UPDATE_INTERVAL: u128 = 16; // milliseconds
 const BAR_EMPTY_CHAR: char = '▒';
 const BAR_FULL_CHAR: char = '█';
@@ -72,8 +74,6 @@ fn main() {
   let mut seconds = 0;
   let mut current_number = String::new(); // temporary buffer to store the currently parsing number
 
-  println!();
-
   for character in duration.chars() {
     match character {
       // take our current buffer and store it as seconds
@@ -132,10 +132,12 @@ fn main() {
   let (exit_tx, exit_rx) = channel();
   ctrlc::set_handler(move || exit_tx.send(()).expect("Could not send signal on channel.")).expect("Error setting Ctrl-C handler");
 
+  println!(); // create an empty line, as below we will move up and clear it
+
   let mut last_update = Instant::now();
   loop {
     if exit_rx.try_recv().is_ok() {
-      clear_line();
+      terminal::clear_line();
 
       println!("Exiting early!");
 
@@ -155,7 +157,7 @@ fn main() {
       continue;
     }
 
-    let terminal_width = get_terminal_width() as usize;
+    let terminal_width = terminal::get_width() as usize;
 
     let bar_width = match terminal_width - 15 {
       n if n < 30 => n,
@@ -168,8 +170,8 @@ fn main() {
     let remaining = end - now;
     let seconds = remaining.as_secs() as f64;
 
-    previous_line();
-    clear_line();
+    terminal::previous_line();
+    terminal::clear_line();
 
     print!("{} - ", chrono::Local::now().format("%_I:%M%P").to_string().trim());
 
@@ -185,18 +187,18 @@ fn main() {
 
     println!("{}s", (seconds % 60.0).ceil());
 
-    clear_line();
+    terminal::clear_line();
 
     for i in 0..progress_width {
       let red = lerp(90, 123, i as f64 / bar_width as f64);
       let green = lerp(105, 90, i as f64 / bar_width as f64);
 
-      print!("{}{}", ansi_rgb(red, green, 237), BAR_FULL_CHAR);
+      print!("{}{}", terminal::ansi_rgb(red, green, 237), BAR_FULL_CHAR);
     }
 
     print!(
       "{}{}{}[39m  {}%",
-      ansi_rgb(100, 100, 100),
+      terminal::ansi_rgb(100, 100, 100),
       BAR_EMPTY_CHAR.to_string().repeat(bar_width - progress_width),
       27 as char,
       (progress * 100.0).round()
@@ -207,43 +209,14 @@ fn main() {
     last_update = now;
   }
 
-  previous_line();
-  clear_line();
+  terminal::previous_line();
+  terminal::clear_line();
 
   print!("{}", 7 as char); // beep/alert
 
   println!("Finished!");
 
-  clear_line();
-}
-
-/// Move cursor to beginning of the previous line
-fn previous_line() {
-  print!("{}[F", 27 as char);
-}
-
-fn clear_line() {
-  // Move the cursor to the beginning of the line
-  print!("\r");
-
-  // Print whitespace characters to clear the line
-  for _ in 0..get_terminal_width() {
-    print!(" ");
-  }
-
-  print!("\r");
-}
-
-fn ansi_rgb(red: u8, green: u8, blue: u8) -> String {
-  format!("{}[38;2;{red};{green};{blue}m", 27 as char)
-}
-
-fn lerp(a: u8, b: u8, t: f64) -> u8 {
-  ((1.0 - t) * (a as f64) + t * (b as f64)).round() as u8
-}
-
-fn get_terminal_width() -> u16 {
-  termsize::get().unwrap_or(termsize::Size { rows: 10, cols: 80 }).cols
+  terminal::clear_line();
 }
 
 fn print_help() {
@@ -254,4 +227,8 @@ fn print_help() {
   println!("  duration       Start a timer for duration");
   println!("  -v, --version  Print version information");
   println!("  -h, --help     Print this help message");
+}
+
+fn lerp(a: u8, b: u8, t: f64) -> u8 {
+  ((1.0 - t) * (a as f64) + t * (b as f64)).round() as u8
 }
