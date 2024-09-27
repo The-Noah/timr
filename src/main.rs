@@ -132,6 +132,8 @@ fn main() {
   let (exit_tx, exit_rx) = channel();
   ctrlc::set_handler(move || exit_tx.send(()).expect("Could not send signal on channel.")).expect("Error setting Ctrl-C handler");
 
+  terminal::set_cursor_visible(false);
+
   println!(); // create an empty line, as below we will move up and clear it
 
   let mut last_update = Instant::now();
@@ -139,6 +141,7 @@ fn main() {
     if exit_rx.try_recv().is_ok() {
       terminal::clear_line();
 
+      terminal::set_cursor_visible(true);
       println!("Exiting early!");
 
       stdout().flush().unwrap();
@@ -219,6 +222,8 @@ fn main() {
   terminal::clear_line();
 
   print!("{}", 7 as char); // beep/alert
+
+  terminal::set_cursor_visible(true);
 
   println!("Finished!");
 

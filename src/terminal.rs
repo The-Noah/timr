@@ -1,3 +1,5 @@
+use std::io::{stdout, Write};
+
 /// Move cursor to beginning of the previous line.
 pub fn previous_line() {
   print!("{}[F", 27 as char);
@@ -15,6 +17,16 @@ pub fn clear_line() {
 
   // reset back to beginning of line
   print!("\r");
+}
+
+pub fn set_cursor_visible(visible: bool) {
+  if visible {
+    print!("{}[?25h", 27 as char);
+  } else {
+    print!("{}[?25l", 27 as char);
+  }
+
+  stdout().flush().unwrap();
 }
 
 /// Get the ANSI code to color the foreground in `red`, `green`, `blue`.
