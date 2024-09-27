@@ -160,15 +160,13 @@ fn main() {
       continue;
     }
 
-    let terminal_width = terminal::get_width() as usize;
-
-    let bar_width = match terminal_width - 15 {
+    let bar_width = match terminal::get_width() - 15 {
       n if n < 30 => n,
       _ => 30,
     };
 
     let progress = now.duration_since(start).as_millis() as f64 / duration.as_millis() as f64; // 0-1
-    let progress_width = (progress * bar_width as f64).round() as usize;
+    let progress_width = (progress * bar_width as f64).round() as u16;
 
     let remaining = end - now;
     let seconds = remaining.as_secs() as f64;
@@ -208,7 +206,7 @@ fn main() {
     print!(
       "{}{}{}[39m  {}%",
       terminal::ansi_rgb(100, 100, 100),
-      BAR_EMPTY_CHAR.to_string().repeat(bar_width - progress_width),
+      BAR_EMPTY_CHAR.to_string().repeat((bar_width - progress_width) as usize),
       27 as char,
       (progress * 100.0).round()
     );
