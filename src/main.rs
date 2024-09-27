@@ -7,7 +7,7 @@ use std::{
 };
 
 const BAR_UPDATE_INTERVAL: u128 = 16; // milliseconds
-const BAR_EMPTY_CHAR: char = '░';
+const BAR_EMPTY_CHAR: char = '▒';
 const BAR_FULL_CHAR: char = '█';
 
 fn main() {
@@ -148,11 +148,11 @@ fn main() {
     let progress = now.duration_since(start).as_millis() as f64 / duration.as_millis() as f64; // 0-1
     let progress_width = (progress * bar_width as f64).round() as usize;
 
-    let bar = format!(
-      "{}{}",
-      BAR_FULL_CHAR.to_string().repeat(progress_width),
-      BAR_EMPTY_CHAR.to_string().repeat(bar_width - progress_width)
-    );
+    // let bar = format!(
+    //   "{}{}",
+    //   BAR_FULL_CHAR.to_string().repeat(progress_width),
+    //   BAR_EMPTY_CHAR.to_string().repeat(bar_width - progress_width)
+    // );
 
     let remaining = end - now;
     let seconds = remaining.as_secs() as f64;
@@ -170,10 +170,26 @@ fn main() {
       _ => {}
     }
 
-    println!("{}s", (seconds % 60.0).round());
+    println!("{}s", (seconds % 60.0).ceil());
 
     clear_line();
-    print!("{} {}%", bar, (progress * 100.0).round());
+
+    for i in 0..progress_width {
+      let red = lerp(90, 123, i as f64 / bar_width as f64);
+      let green = lerp(105, 90, i as f64 / bar_width as f64);
+
+      print!("{}{}", ansi_rgb(red, green, 237), BAR_FULL_CHAR);
+    }
+
+    print!(
+      "{}{}{}[39m {}%",
+      ansi_rgb(100, 100, 100),
+      BAR_EMPTY_CHAR.to_string().repeat(bar_width - progress_width),
+      27 as char,
+      (progress * 100.0).round()
+    );
+
+    // print!("{}{}{}[39m {}%", ansi_rgb(red, green, 237), bar, 27 as char, (progress * 100.0).round());
 
     stdout().flush().unwrap();
 
@@ -203,6 +219,14 @@ fn clear_line() {
   }
 
   print!("\r");
+}
+
+fn ansi_rgb(red: u8, green: u8, blue: u8) -> String {
+  format!("{}[38;2;{red};{green};{blue}m", 27 as char)
+}
+
+fn lerp(a: u8, b: u8, t: f64) -> u8 {
+  ((1.0 - t) * (a as f64) + t * (b as f64)).round() as u8
 }
 
 fn get_terminal_width() -> u16 {
