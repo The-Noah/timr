@@ -1,0 +1,15 @@
+[package]
+name = "timr"
+version = "0.1.0"
+edition = "2021"
+authors = ["Noah Dunbar <noah@noahdunbar.com>"]
+license = "MIT"
+description = "Simple CLI timer"
+readme = "README.md"
+homepage = "https://github.com/The-Noah/timr"
+repository = "https://github.com/The-Noah/timr"
+keywords = ["cli"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+termsize = "0.1.9"
