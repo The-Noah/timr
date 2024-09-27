@@ -171,6 +171,8 @@ fn main() {
     previous_line();
     clear_line();
 
+    print!("{} - ", chrono::Local::now().format("%_I:%M%P").to_string().trim());
+
     match (seconds / 3600.0).floor() {
       hours if hours > 0.0 => print!("{}h", hours),
       _ => {}
