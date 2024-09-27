@@ -165,12 +165,6 @@ fn main() {
     let progress = now.duration_since(start).as_millis() as f64 / duration.as_millis() as f64; // 0-1
     let progress_width = (progress * bar_width as f64).round() as usize;
 
-    // let bar = format!(
-    //   "{}{}",
-    //   BAR_FULL_CHAR.to_string().repeat(progress_width),
-    //   BAR_EMPTY_CHAR.to_string().repeat(bar_width - progress_width)
-    // );
-
     let remaining = end - now;
     let seconds = remaining.as_secs() as f64;
 
@@ -205,8 +199,6 @@ fn main() {
       27 as char,
       (progress * 100.0).round()
     );
-
-    // print!("{}{}{}[39m {}%", ansi_rgb(red, green, 237), bar, 27 as char, (progress * 100.0).round());
 
     stdout().flush().unwrap();
 
