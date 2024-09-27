@@ -193,7 +193,7 @@ fn main() {
     }
 
     print!(
-      "{}{}{}[39m {}%",
+      "{}{}{}[39m  {}%",
       ansi_rgb(100, 100, 100),
       BAR_EMPTY_CHAR.to_string().repeat(bar_width - progress_width),
       27 as char,
