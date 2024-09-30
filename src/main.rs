@@ -1,16 +1,31 @@
 use std::{
+  fs,
   io::{stdout, Write},
+  path::PathBuf,
   process::exit,
   sync::mpsc::channel,
   thread::sleep,
   time::{Duration, Instant},
 };
 
+use serde::Deserialize;
+
 mod terminal;
 
 const BAR_UPDATE_INTERVAL: u128 = 16; // milliseconds
 const BAR_EMPTY_CHAR: char = '▒';
 const BAR_FULL_CHAR: char = '█';
+
+#[derive(Deserialize)]
+struct Config {
+  profiles: Option<Vec<Profile>>,
+}
+
+#[derive(Deserialize)]
+struct Profile {
+  name: String,
+  duration: String,
+}
 
 fn main() {
   // encourage control characters on Windows (https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences)
@@ -69,7 +84,41 @@ fn main() {
     exit(1);
   }
 
-  let duration = parse_duration(duration.unwrap());
+  let duration = duration.unwrap();
+
+  if duration.is_empty() {
+    unreachable!("Duration must not be empty");
+  }
+
+  let duration = match duration.chars().next().unwrap() {
+    '0'..='9' => parse_duration(duration),
+    _ => {
+      let config_path = home_dir().expect("Failed to find user's home directory").join(".config").join("timr.toml");
+
+      if !config_path.exists() {
+        eprintln!("$HOME/.config/timr.toml does not exist");
+        exit(1);
+      }
+
+      let config: Config = toml::from_str(fs::read_to_string(config_path).expect("Failed to read config file").as_str()).expect("Failed to parse config file");
+
+      if config.profiles.is_none() {
+        eprint!("Config does not contain any profiles");
+        exit(1);
+      }
+
+      let profiles = config.profiles.unwrap();
+
+      let profile = profiles.iter().find(|profile| profile.name == *duration);
+
+      if profile.is_none() {
+        eprint!("No profile found matching {}", duration);
+        exit(1);
+      }
+
+      parse_duration(&profile.unwrap().duration)
+    }
+  };
 
   let start = Instant::now();
   let end = start + duration;
@@ -228,6 +277,28 @@ fn parse_duration(duration: &str) -> Duration {
   }
 
   Duration::from_secs(seconds)
+}
+
+fn home_dir() -> Option<PathBuf> {
+  #[cfg(target_family = "windows")]
+  {
+    use windows_sys::Win32::{UI::Shell::*, *};
+
+    let mut p = std::ptr::null_mut();
+    let r = if unsafe { SHGetKnownFolderPath(&FOLDERID_Profile, 0, std::ptr::null_mut(), &mut p) } == 0 {
+      let w = unsafe { core::slice::from_raw_parts(p, Globalization::lstrlenW(p) as _) };
+      let o: std::ffi::OsString = std::os::windows::ffi::OsStringExt::from_wide(w);
+      Some(o.into())
+    } else {
+      None
+    };
+
+    unsafe { System::Com::CoTaskMemFree(p as _) }
+    r
+  }
+
+  #[cfg(not(target_family = "windows"))]
+  std::env::var_os("HOME").map(Into::into)
 }
 
 fn print_help() {
