@@ -164,7 +164,7 @@ fn main() {
     let progress_width = (progress * bar_width as f64).round() as u16;
 
     let remaining = end - now;
-    let seconds = remaining.as_secs() as f64;
+    let seconds = remaining.as_secs_f64();
 
     terminal::previous_line();
     terminal::clear_line();
@@ -185,7 +185,7 @@ fn main() {
     }
 
     // print seconds remaining
-    println!("{}s", (seconds % 60.0).ceil());
+    println!("{}s", (seconds % 60.0).floor());
 
     terminal::clear_line();
 
