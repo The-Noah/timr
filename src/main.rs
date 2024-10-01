@@ -206,6 +206,9 @@ fn main() {
       (progress * 100.0).round()
     );
 
+    // output progress for virtual terminals
+    print!("{}]9;4;1;{}{}", 27 as char, (progress * 100.0).round(), 7 as char);
+
     stdout().flush().unwrap();
 
     last_update = now;
@@ -213,6 +216,9 @@ fn main() {
 
   terminal::previous_line();
   terminal::clear_line();
+
+  // reset progress bar
+  print!("{}]9;4;0;100{}", 27 as char, 7 as char);
 
   print!("{}", 7 as char); // beep/alert
 
