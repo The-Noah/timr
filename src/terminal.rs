@@ -46,7 +46,7 @@ pub fn hide_progress() {
 
 /// Get the ANSI code to color the foreground in `red`, `green`, `blue`.
 pub fn ansi_rgb(red: u8, green: u8, blue: u8) -> String {
-  format!("{}[38;2;{red};{green};{blue}m", 27 as char)
+  format!("{ESCAPE}[38;2;{red};{green};{blue}m")
 }
 
 /// Get the terminal's column count.
