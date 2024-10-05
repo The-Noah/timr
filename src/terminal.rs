@@ -1,8 +1,12 @@
 use std::io::{stdout, Write};
 
+// ANSI codes
+const ESCAPE: char = 27 as char;
+const ALERT: char = 7 as char;
+
 /// Move cursor to beginning of the previous line.
 pub fn previous_line() {
-  print!("{}[F", 27 as char);
+  print!("{ESCAPE}[F");
 }
 
 /// Clear the current line of all characters.
@@ -19,14 +23,25 @@ pub fn clear_line() {
   print!("\r");
 }
 
+/// Enables/disables cursor visibility in the terminal.
 pub fn set_cursor_visible(visible: bool) {
   if visible {
-    print!("{}[?25h", 27 as char);
+    print!("{ESCAPE}[?25h");
   } else {
-    print!("{}[?25l", 27 as char);
+    print!("{ESCAPE}[?25l");
   }
 
   stdout().flush().unwrap();
+}
+
+/// Sets virtual terminal progress
+pub fn progress(progress: u32) {
+  print!("{ESCAPE}]9;4;1;{progress}{ALERT}");
+}
+
+/// Hide virtual terminal progress
+pub fn hide_progress() {
+  print!("{ESCAPE}]9;4;0;100{ALERT}");
 }
 
 /// Get the ANSI code to color the foreground in `red`, `green`, `blue`.
